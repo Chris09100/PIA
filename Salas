@@ -7,6 +7,9 @@ from sqlite3 import Error
 fecha_actual = datetime.date.today()
 fecha_delta = datetime.timedelta(days=3)
 fecha_per = fecha_actual + fecha_delta
+id_cliente = {}
+sala_id = {}
+reservaciones = {}
 turnos = {1:"Matutino",
           2:"Veespertino",
           3:"Nocturno"}
@@ -34,7 +37,7 @@ while True:
     print("3) Registrar una sala")
     print("4) Registrar un cliente")
     print("5) Salir")
-    respuesta = input("¿Que opcion desea?: ")
+    respuesta = input("¿Que opcion desea?: ") 
 
     try:
      respuesta_int = int(respuesta)
@@ -42,267 +45,248 @@ while True:
         print("* NO ES VALIDA LA RESPUESTA *")
     except Exception:
         print("** SE HA PRESENTADO UNA EXCEPCION")
-   
     if respuesta_int == 1:
-        print("***********")
-        print("*      RESERVACIONES        *")
-        print("***********")
-        print("1) Registrar nueva reservacion")
-        print("2) Modificar descripcion de una reservacion")
-        print("3) Consultar disponibilidad de salas para una fecha")
-        print("4) Eliminar una reservacion")
-        print("5) Salir")
-        res= input("¿Que opcion desea?: ")
+       print("***********")
+       print("*      RESERVACIONES        *")
+       print("***********")
+       print("1) Registrar nueva reservacion")
+       print("2) Modificar descripcion de una reservacion")
+       print("3) Consultar disponibilidad de salas para una fecha")
+       print("4) Eliminar una reservacion")
+       print("5) Salir")
+       res= input("¿Que opcion desea?: ")
 
-        try:
+       try:
            res_int = int(res)
-        except ValueError:
+       except ValueError:
            print("* NO ES VALIDA LA RESPUESTA *")
-        except Exception:
-            print("** SE HA PRESENTADO UNA EXCEPCION")
-        
-        if res_int == 1:
-            print("**********")
-            print("        RESERVACION         ")
-            print("**********")
-            try:
-              with sqlite3.connect("PIA EDyP.db", detect_types= sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) as conn:
-                mi_cursor = conn.cursor()
-                mi_cursor.execute("SELECT * FROM clientes ORDER BY nombre")
-                registros = mi_cursor.fetchall()
-                print("   ")
-                if registros:
-                    print("Claves\tNombres")
-                    print("*" * 25)
-                    for clave, nombre in registros:
-                      print(f"{clave}\t{nombre}")
-                      print("")
-                      cliente_reserva = int(input("Clave del cliente que desea reservar: "))          
-                    if cliente_reserva in registros:
-                        num_res = [random.randrange(1,1001) for valor in range(1000)]
-                        clave = id(num_res)
-                        print(f"Clave de reservacion: {clave}")
-                        mi_cursor.execute("SELECT * FROM salas ORDER BY nombre")
-                        registro_salas = mi_cursor.fetchall()
-                        print("  ")
-                        if registro_salas:
-                          print("Clave\tSala\tCupo")
-                          print("*" * 25)
-                          for clave, sala, cupo in  registro_salas:
-                            print(f"{clave}\t{sala}\t{cupo}")    
-                            res_sala = int(input("Clave de la sala ha reservar: "))
-                            if res_sala in registro_salas:
-                               desc = ("Descripcion del evento: ")
-                               fecha_res = input("Fecha ha reservar (dd/mm/aaaa): ")
-                               fecha = datetime.datetime.strptime(fecha, "%d/%m/%Y").date()
-                               if fecha > fecha_actual:
-                                  turno = input(f"Turno {turnos}: ") 
-                                  try:
-                                    Turno_int = int(turno)
-                                  except ValueError:
-                                    print("NO ES VALIDA ESTA RESPUESTA")
-                                  except Exception:
-                                    print("HA OCURRIDO UNA EXCEPCIÓN")
-                                    reservacion = (clave, desc, fecha, turno, cliente_reserva, res_sala)
+       except Exception:
+           print("** SE HA PRESENTADO UNA EXCEPCION")
+       if res_int == 1:
+          print("**********")
+          print("        RESERVACION         ")
+          print("**********")
+          print(id_cliente)
+          cliente_reservar = int(input("Clave del cliente que desea reservar: "))
+          if cliente_reservar in id_cliente:
+              print(sala_id)
+              clave_sala = int(input("Clave de la sala que desea reservar: "))
+              if clave_sala in sala_id:
+                   num = [random.randrange(1,1001) for valor in range(1)]
+                   clave_reser = id(num)
+                   desc = input("Descripcion de la sala: ")
+                   fecha_res = input("Fecha ha reservar (dd/mm/aaaa): ")
+                   fecha = datetime.datetime.strptime(fecha_res, "%d/%m/%Y").date()
+                   if fecha > fecha_actual:
+                       turno = input(f"Turno {turnos}: ") 
+                       try:
+                           Turno_int = int(turno)
+                           try:
+                               with sqlite3.connect("PIA EDyP.db") as conn:
+                                    mi_cursor = conn.cursor()
+                                    reservaciones  [clave_reser] = (desc, fecha, turno, cliente_reservar, clave_sala)
+                                    reservacion = (clave_reser, desc, fecha, turno, cliente_reservar, clave_sala)
                                     mi_cursor.execute("INSERT INTO reservaciones VALUES(?,?,?,?,?,?)",reservacion)
                                     print("SE HA REGISTRADO UNA RESERVACION")
-                               else:
-                                  print("FECHA NO VALIDA")    
-                          else:
-                            print("Esta sala no se encuentra")        
-                        else:
-                           print("Esta clave no se encuentra en registros")
-                    else:
-                      print("No se encontraron registros")
-            except Error as e:
-                 print(e) 
-            except:
-               print(f"Se produjo un error {sys.exc_info()[0]}")
-            finally:
-                conn.close() 
-        
-        if res_int == 2:
-            print("***************")
-            print("        MODIFICACION DE DESCRIPCION        ")
-            print("***************")
-            try:
-              with sqlite3.connect("PIA EDyP.db", detect_types= sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) as conn:
-                mi_cursor = conn.cursor()
-                mi_cursor.execute("SELECT * FROM reservaciones ORDER BY nombre")
-                reservaciones = mi_cursor.fetchall()
-                print("   ")
-                if reservaciones:
-                    print("clave\tdesc\tfecha\tturno\tcliente_reserva\tres_sala")
-                    print("*" * 25)
-                    for clave, desc, fecha, turno, cliente_reserva, res_sala in registros:
-                      print(f"{clave}\t{desc}\t{fecha}\t{turno}\t{cliente_reserva}\t{res_sala}")
-                      print("")
-                      des= int(input("Clave de la reservacion a la que le desea cambiar la descripcion: ")) 
-                      nuev_des = input("Nueva descripcion: ")
-                      desc_nuev = (nuev_des,des)
+                           except Error as e:
+                              print(e) 
+                           except:
+                              print(f"Se produjo un error {sys.exc_info()[0]}")
+                           finally:
+                              conn.close()
+                       except ValueError:
+                           print("NO ES VALIDA ESTA RESPUESTA")
+                       except Exception:
+                           print("HA OCURRIDO UNA EXCEPCIÓN")
+                   else:
+                    print("Fecha no valida") 
+                           
+              else:
+                print("Sala no encontrada")
+                
+          else:
+            print("Cliente no enocntrado")
+            
+                     
+       if res_int == 2:
+          print("***************")
+          print("        MODIFICACION DE DESCRIPCION        ")
+          print("***************")
+          print(reservaciones)
+          des= int(input("Clave de la reservacion a la que le desea cambiar la descripcion: "))
+          if des in reservaciones:
+              nuev_des = input("Nueva descripcion: ")
+              desc_nuev = (nuev_des,des)
+              try:
+                  with sqlite3.connect("PIA EDyP.db") as conn:
+                      mi_cursor = conn.cursor()
                       mi_cursor.execute("UPDATE reservaciones SET desc = (?) WHERE clave = (?)",desc_nuev)
                       print("LA DESCRIPCION A SIDO MODIFICADA")
                       print("")
-                      mi_cursor.execute("SELECT * FROM reservaciones WHERE clave = (?)",des)
-                      reservacion = mi_cursor.fetchall()
-                      print("   ")
-                      if reservacion:
-                          print("clave\tdesc\tfecha\tturno\tcliente_reserva\tres_sala")
-                          print("*" * 25)
-                          for clave, desc, fecha, turno, cliente_reserva, res_sala in registros:
-                              print(f"{clave}\t{desc}\t{fecha}\t{turno}\t{cliente_reserva}\t{res_sala}")
-            except Error as e:
-              print(e) 
-            except:
-               print(f"Se produjo un error {sys.exc_info()[0]}")
-            finally:
-              conn.close()  
-        if res_int == 3:
-            print("**************")
-            print("        DISPONIBILIDAD DE SALAS         ")
-            print("**************")
-            try:
+              except Error as e:
+                    print(e) 
+              except:
+                     print(f"Se produjo un error {sys.exc_info()[0]}")
+              finally:
+                     conn.close()
+          else:
+              print("No se encuentra esa reservacion")
+         
+       if res_int == 3:
+          print("**************")
+          print("        DISPONIBILIDAD DE SALAS         ")
+          print("**************")
+          try:
                 with sqlite3.connect("PIA EDyP.db") as conn:
                     mi_cursor = conn.cursor()
                     mi_cursor.execute("SELECT * FROM salas WHERE clave NOT IN (SELECT sala FROM reservaciones)")
-                    registro_salas = mi_cursor.fetchall()
+                    salas_disp = mi_cursor.fetchall()
                     print("  ")
-                    if registro_salas:
+                    if salas_disp:
                        print("Clave\tSala\tCupo")
                        print("*" * 25)
-                       for clave, sala, cupo in  registro_salas:
-                         print(f"{clave}\t{sala}\t{cupo}")
+                       for clave, sala, cupo in  salas_disp:
+                        print(f"{clave}\t{sala}\t{cupo}")
+                        print("")
                    
-            except Error as e:
+          except Error as e:
               print(e) 
-            except:
+          except:
                print(f"Se produjo un error {sys.exc_info()[0]}")
-            finally:
+          finally:
               conn.close()  
-        
-        if res_int == 4:
-            print("***************")
-            print("        ELIMINAR UNA RESERVACION         ")
-            print("***************")
-            try:
-              with sqlite3.connect("PIA EDyP.db", detect_types= sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) as conn:
-                mi_cursor = conn.cursor()
-                mi_cursor.execute("SELECT * FROM reservaciones ORDER BY nombre")
-                reservaciones = mi_cursor.fetchall()
-                print("   ")
-                if reservaciones:
-                  print("RESERVACIONES")
-                  print("clave\tdesc\tfecha\tturno\tcliente_reserva\tres_sala")
-                  print("*" * 25)
-                  for clave, desc, fecha, turno, cliente_reserva, res_sala in registros:
-                    print(f"{clave}\t{desc}\t{fecha}\t{turno}\t{cliente_reserva}\t{res_sala}")
-                    print("")
-                    eliminar = input("Clave de la reservación que desea eliminar: ")
-                    valor = (eliminar)
-                    mi_cursor.execute("SELECT * FROM reservaciones WHERE clave = (?)",valor)
-                    print("RESERVACION")
-                    print("clave\tdesc\tfecha\tturno\tcliente_reserva\tres_sala")
-                    print("*" * 25)
-                    for clave, desc, fecha, turno, cliente_reserva, res_sala in registros:
-                      print(f"{clave}\t{desc}\t{fecha}\t{turno}\t{cliente_reserva}\t{res_sala}")
-                      print("")
-                      seguro = input("¿Seguro que deseas eliminar esa reservacion?: ")
-                      if seguro == "si":
-                        if fecha >= fecha_per:
-                          mi_cursor.execute("DELET FROM reservaciones WHERE clave=(?),valor")
-                          print("LA RESERVACION HA SIDO ELIMINADA")
-                        else:
-                          print("SOLO SE PUEDE ELIMINAR LAS RESERVACIONES 3 DIAS ANTES")
-                      elif seguro == "no":
-                          break
-            except Error as e:
-                 print(e) 
-            except:
-               print(f"Se produjo un error {sys.exc_info()[0]}")
-            finally:
-                conn.close() 
-                         
-
-        elif res_int == 5:
-         break
-        else:
-         print(f"Su opcion no es valida.") 
-
-    if respuesta_int == 2:
-        print("***********")
-        print("*        REPORTES           *")
-        print("***********")
-        print("1) Reporte en pantalla de reservaciones para una fecha")
-        print("2) Exportar reporte tabular en Excel")
-        print("3) Salir")
-        rep= input("Que opcion desea?: ")
-
-        try:
-           rep_int = int(rep)
-        except ValueError:
-           print("* NO ES VALIDA LA RESPUESTA *")
-        except Exception:
-            print("** SE HA PRESENTADO UNA EXCEPCION")  
-
-        if rep_int == 1:
-            print("*******^******")
-            print("        REPORTE EN PANTALLA         ")
-            print("************")
-            print("   ")
-            con_fecha = input("Fecha de reservas que desea consultar(dd/mm/aaaa): ")
-            fecha_con = datetime.datetime.strptime(con_fecha, "%d/%m/%Y").date()
-            try:
+       if res_int == 4:
+          print("***************")
+          print("        ELIMINAR UNA RESERVACION         ")
+          print("***************")
+          try:
                 with sqlite3.connect("PIA EDyP.db", detect_types= sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) as conn:
                     mi_cursor = conn.cursor()
-                    consultas = {"fecha": fecha_con}
-                    mi_cursor.execute("SELECT clave, desc, fecha, turno, cliente_reserva, res_sala FROM reservaciones WHERE DATE(fecha_res) = _fecha;", consultas)
-                    cons = mi_cursor.fetchall
-                    if registro_salas:
-                        print("Clave\tDesc.\tFecha\tCliente\tSala")
+                    mi_cursor.execute("SELECT * FROM reservaciones")
+                    reservaciones = mi_cursor.fetchall()
+                    print("   ")
+                    if reservaciones:
+                       print("RESERVACIONES")
+                       print("clave\tdesc\tfecha\tturno\tcliente_reserva\tres_sala")
+                       print("*" * 25)
+                       for clave, desc, fecha, turno, cliente_reserva, res_sala in reservaciones:
+                        print(f"{clave}\t{desc}\t{fecha}\t{turno}\t{cliente_reserva}\t{res_sala}")
+                        print("")
+                        eliminar = input("Clave de la reservación que desea eliminar: ")
+                        valor = (eliminar)
+                        mi_cursor.execute("SELECT * FROM reservaciones WHERE clave = (?)",valor)
+                        print("RESERVACION")
+                        print("clave\tdesc\tfecha\tturno\tcliente_reserva\tres_sala")
                         print("*" * 25)
-                        for clave, desc, fecha, turno, cliente_reserva, res_sala in cons:
-                            print(f"{clave}\t{desc}\t{fecha}\t{turno}\t{cliente_reserva}\t{res_sala}")
-            except Error as e:
-                 print(e) 
-            except:
+                        for clave, desc, fecha, turno, cliente_reserva, res_sala in reservacion:
+                           print(f"{clave}\t{desc}\t{fecha}\t{turno}\t{cliente_reserva}\t{res_sala}")
+                           print("")
+                           seguro = input("¿Seguro que deseas eliminar esa reservacion?: ")
+                           if seguro == "si":
+                               if fecha >= fecha_per:
+                                  mi_cursor.execute("DELET FROM reservaciones WHERE clave=(?),valor")
+                                  print("LA RESERVACION HA SIDO ELIMINADA")
+                                  print("")
+                               else:
+                                  print("SOLO SE PUEDE ELIMINAR LAS RESERVACIONES 3 DIAS ANTES")
+                           elif seguro == "no":
+                               break
+          except Error as e:
+                print(e) 
+          except:
                print(f"Se produjo un error {sys.exc_info()[0]}")
-            finally:
+          finally:
                 conn.close() 
+       elif res_int == 5:
+           break
+      
+    if respuesta_int == 2:
+       print("***********")
+       print("*        REPORTES           *")
+       print("***********")
+       print("1) Reporte en pantalla de reservaciones para una fecha")
+       print("2) Exportar reporte tabular en Excel")
+       print("3) Salir")
+       rep= input("Que opcion desea?: ")
 
-          
-        if rep_int == 2:
-            print("***********")
-            print("        REPORTE EN EXCEL       ")
-            print("***********")
-        
-        elif res_int == 3:
-          break
-        else:
-          print(f"Su opcion no es valida.") 
-
+       try:
+           rep_int = int(rep)
+       except ValueError:
+           print("* NO ES VALIDA LA RESPUESTA *")
+       except Exception:
+           print("** SE HA PRESENTADO UNA EXCEPCION")  
+       if rep_int == 1:
+          print("*******^******")
+          print("        REPORTE EN PANTALLA         ")
+          print("************")
+          print("   ")
+          con_fecha = input("Fecha de reservas que desea consultar(dd/mm/aaaa): ")
+          fecha_con = datetime.datetime.strptime(con_fecha, "%d/%m/%Y").date()
+          try:
+                with sqlite3.connect("PIA EDyP.db", detect_types= sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) as conn:
+                    mi_cursor = conn.cursor()
+                    consultas = (fecha_con)
+                    mi_cursor.execute("SELECT clave, desc, fecha, turno, cliente, sala FROM reservaciones WHERE fecha =(?)", consultas)
+                    cons = mi_cursor.fetchall
+                    if cons:
+                       print("Clave\tDesc.\tFecha\tCliente\tSala")
+                       print("*" * 25)
+                       for clave, desc, fecha, turno, cliente, sala in cons:
+                        print(f"{clave}\t{desc}\t{fecha}\t{turno}\t{cliente}\t{sala}")
+                        print("")
+          except Error as e:
+               print(e) 
+          except:
+            print(f"Se produjo un error {sys.exc_info()[0]}")
+          finally:
+            conn.close() 
+       if rep_int == 2:
+           print("***********")
+           print("        REPORTE EN EXCEL       ")
+           print("***********")
+           con_fecha = input("Fecha de reservas que desea consultar(dd/mm/aaaa): ")
+           fecha_con = datetime.datetime.strptime(con_fecha, "%d/%m/%Y").date()
+           try:
+                with sqlite3.connect("PIA EDyP.db", detect_types= sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) as conn:
+                    mi_cursor = conn.cursor()
+                    consultas = (fecha_con)
+                    mi_cursor.execute("SELECT clave, desc, fecha, turno, cliente, sala FROM reservaciones WHERE fecha =(?)", consultas)
+                    excel = mi_cursor.fetchall
+                    reporte_excel = excel.to_excel("Reporte en excel.xlsx")
+                    print("Archivo de excel realizado.")
+                    print("")
+           except Error as e:
+                 print(e) 
+           except:
+                 print(f"Se produjo un error {sys.exc_info()[0]}")
+           finally:
+                 conn.close()
+       elif rep_int == 3:
+           break
+       
     if respuesta_int == 3:
-        print("************")
-        print("        REGISTRAR SALA          ")
-        print("************")
-        print("")
-        numero = [random.randrange(1,1001) for valor in range(1)]
-        clave = id(numero)
-        print(f"Clave de la sala {clave}")
-        sala = input("Nombre de la sala: ")
-        cupo = int(input("Cupo de sala: "))
-        try:
-          with sqlite3.connect("PIA EDyP.db") as conn:
-               mi_cursor = conn.cursor()
-               salas = (clave, sala, cupo)
-               mi_cursor.execute("INSERT INTO salas VALUES(?,?,?)", salas)
-               print("Sala registrada exitosamente")
-        except Error as e:
-           print(e) 
-        except:
+       print("************")
+       print("        REGISTRAR SALA          ")
+       print("************")
+       numero = [random.randrange(1,1001) for valor in range(1)]
+       clave = id(numero)
+       print(f"Clave de la sala {clave}")
+       sala = input("Nombre de la sala: ")
+       cupo = int(input("Cupo de sala: "))
+       try:
+           with sqlite3.connect("PIA EDyP.db") as conn:
+                mi_cursor = conn.cursor()
+                sala_id [clave] = (sala, cupo)
+                salas = (clave, sala, cupo)
+                mi_cursor.execute("INSERT INTO salas VALUES(?,?,?)", salas)
+                print("Sala registrada exitosamente")
+                print("")
+       except Error as e:
+          print(e) 
+       except:
            print(f"Se produjo un error {sys.exc_info()[0]}")
-        finally:
-           conn.close()  
-
+       finally:
+        conn.close()  
     if respuesta_int == 4:
        print("**************")
        print("       REGISTRO DE NUEVO CLIENTE        ")
@@ -312,17 +296,19 @@ while True:
        clave = id(numero)
        print(f"Clave del cliente: {clave}")
        nombre = input("Nombre del cliente: ")
+       print("")
        try:
-          with sqlite3.connect("PIA EDyP.db") as conn:
+           with sqlite3.connect("PIA EDyP.db") as conn:
                mi_cursor = conn.cursor()
+               id_cliente [clave] = (nombre)
                cliente = (clave, nombre)
                mi_cursor.execute("INSERT INTO clientes VALUES(?,?)", cliente)
                print("Cliente registrado exitosamente")
        except Error as e:
-           print(e) 
+          print(e) 
        except:
-           print(f"Se produjo un error {sys.exc_info()[0]}")
+          print(f"Se produjo un error {sys.exc_info()[0]}")
        finally:
-           conn.close()  
+          conn.close()  
     elif respuesta_int == 5:
-        break
+       break
